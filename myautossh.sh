@@ -28,7 +28,7 @@ My_port="22"
 
 CHOOSE_1=$1
 CHOOSE_2=$2
-CHOOSE_3=$2
+CHOOSE_3=$3
 SSH_DIR="$(echo ~/.ssh)"
 SSH_CONFIG="${SSH_DIR}/autosshrc"
 KNOWN_CONFIG="$SSH_DIR/known_hosts"
