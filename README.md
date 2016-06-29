@@ -6,6 +6,9 @@ Auto Login SSH Server (expect-based)
 > https://github.com/wufeifei/autossh.git
 
 
+###这个脚本是给那些将mac系统或者linux系统作为常用操作系统的人准备的，windows系统的专心用xshell吧
+
+
 # Install
 
 ```
