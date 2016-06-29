@@ -29,27 +29,28 @@ My_port="22"
 CHOOSE_1=$1
 CHOOSE_2=$2
 CHOOSE_3=$3
+
+FILE="/tmp/.login.sh"
 SSH_DIR="$(echo ~/.ssh)"
+BACK_DIR="$(echo ~/.sshkeybak)"
 SSH_CONFIG="${SSH_DIR}/autosshrc"
 KNOWN_CONFIG="$SSH_DIR/known_hosts"
 CUSTOM_CONFIG="$SSH_DIR/config"
-AUTO_SSH_CONFIG=$(cat ${SSH_CONFIG})
-FILE='/tmp/.login.sh'
-BACK_DIR="$(echo ~/.sshkeybak)"
+AUTO_SSH_CONFIG="$(cat ${SSH_CONFIG})"
 
 
 function CONFIG() {
-    if [ ! -d ${SSH_DIR} ]; then
+    if [ ! -d "${SSH_DIR}" ]; then
         mkdir -p ${SSH_DIR}
         chmod 600 ${SSH_DIR}
     fi
     if [ ! -d "${BACK_DIR}" ]; then
         mkdir -p ${BACK_DIR}
     fi
-    if [ ! -f ${SSH_CONFIG} ]; then
+    if [ ! -f "${SSH_CONFIG}" ]; then
         echo "server name|192.168.1.1|${My_user}|${My_pass}|${My_port}|1" > ${SSH_CONFIG}
     fi
-    if [ ! -f ${CUSTOM_CONFIG} ]; then
+    if [ ! -f "${CUSTOM_CONFIG}" ]; then
         cat > $CUSTOM_CONFIG << E0F
 Host *
     ControlMaster auto
@@ -122,11 +123,11 @@ function SSHD() {
                     echo 'expect "password:"' >> $FILE
                     echo 'send   '$PASS"\r" >> $FILE
                 fi
-                if [ "${CHOOSE_2}" == 'sudo' ]; then
+                if [ "${CHOOSE_2}" == "sudo" ]; then
                     echo 'expect "@"' >> $FILE
                     echo 'send   "sudo su - \r"' >> $FILE
                 else
-                    if [ "${AUTOSUDO}" == 1 ] && [ "${NAME}" != "root" ]; then
+                    if [ "${AUTOSUDO}" == 1 ] && [ "${NAME}" != "root" ] && [ "${CHOOSE_2}" == "" ]; then
                         echo 'expect "@"' >> $FILE
                         echo 'send   "sudo su - \r"' >> $FILE
                     fi
@@ -192,7 +193,6 @@ function FIRST() {
             if [ "$no" == "q" ]; then
                 exit 0 
             fi
-            #echo -e 'Server Number:\c'
         done
     fi
     clear
