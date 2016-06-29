@@ -17,14 +17,14 @@ $ sudo cp myautossh/myautossh /usr/local/bin/a
 
 ```
 $ cat ~/.ssh/autosshrc
-server name|192.168.1.110|root|password|port|is_bastion
+server name|192.168.1.110|root|password|port|autosudo
 wufeifei|192.168.1.1|root|password|22|1
 ```
 
 # Usage
 
 ```
-$ autossh
+$ a
 ############################################################
 #                     [AUTO SSH]                           #
 #                                                          #
@@ -41,23 +41,23 @@ Server Number:(Input Server Num)
 OR
 
 ```
-$ autossh 1
+$ a 1
 ```
 
 OR Auto Sudo
 
 ```
-$ autossh 3 sudo
+$ a 3 sudo
 ```
 
 OR Bastion Host
 
 ```
-$ autossh 1 10.12.0.123
+$ a 1 10.12.0.123
 ```
 
 OR Auto Sudo With Bastion
 
 ```
-$ autossh 1 10.11.0.123 sudo
+$ a 1 10.11.0.123 sudo
 ```

@@ -26,10 +26,13 @@ My_pass=""
 My_port="22"
 # custon config
 
-CHOOSE=$1
-CHOOSE_IP=$2
+CHOOSE_1=$1
+CHOOSE_2=$2
+CHOOSE_3=$2
 SSH_DIR="$(echo ~/.ssh)"
 SSH_CONFIG="${SSH_DIR}/autosshrc"
+KNOWN_CONFIG="$SSH_DIR/known_hosts"
+CUSTOM_CONFIG="$SSH_DIR/config"
 AUTO_SSH_CONFIG=$(cat ${SSH_CONFIG})
 FILE='/tmp/.login.sh'
 BACK_DIR="$(echo ~/.sshkeybak)"
@@ -46,7 +49,16 @@ function CONFIG() {
     if [ ! -f ${SSH_CONFIG} ]; then
         echo "server name|192.168.1.1|${My_user}|${My_pass}|${My_port}|1" > ${SSH_CONFIG}
     fi
-    cp ${SSH_DIR}/* ${BACK_DIR}/
+    if [ ! -f ${CUSTOM_CONFIG} ]; then
+        cat > $CUSTOM_CONFIG << E0F
+Host *
+    ControlMaster auto
+    ControlPath ~/.ssh/%h-%p-%r
+    ControlPersist yes
+E0F
+    fi
+    find ${SSH_DIR} -type f | xargs -J % cp -rp % ${BACK_DIR}
+    #cp ${SSH_DIR}/* ${BACK_DIR}/
 }
 
 function LISTS() {
@@ -94,43 +106,34 @@ function SSHD() {
             NAME=$(echo $server | awk -F\| '{ print $3 }')
             PASS=$(echo $server | awk -F\| '{ print $4 }')
             PORT=$(echo $server | awk -F\| '{ print $5 }')
-            ISBASTION=$(echo $server | awk -F\| '{ print $6 }')
+            AUTOSUDO=$(echo $server | awk -F\| '{ print $6 }')
             if [ "$PORT" == "" ]; then
                 PORT=${My_port}
             fi
-            echo '' > $FILE
-            if [ "$PASS" == "" ]; then
+            if ! grep ${IP} ${KNOWN_CONFIG} &> /dev/null ; then
                 echo "#!/bin/bash" > $FILE
-                echo "ssh -p$PORT "$NAME@$IP >> $FILE
+                echo "ssh -p$PORT $NAME@$IP" >> $FILE
             else
-                ls ${SSH_DIR}/$IP* &> /dev/null && rm -f ${SSH_DIR}/$IP*
                 echo '#!/usr/bin/expect -f' > $FILE
                 echo 'set timeout 30' >> $FILE
-                echo "spawn ssh -p$PORT -l "$NAME $IP >> $FILE
-                echo 'expect "password:"' >> $FILE
-                echo 'send   '$PASS"\r" >> $FILE
-                if [ "$2" == 'sudo' ]; then
-                    echo 'expect "@"' >> $FILE
-                    echo 'send   "sudo su\r"' >> $FILE
-                    echo 'expect "password for"' >> $FILE
+                echo "spawn ssh -p$PORT -l $NAME $IP" >> $FILE
+                if [ "$PASS" != "" ] && [ ! -S ${SSH_DIR}/$IP* ]; then
+                    #[ -S ${SSH_DIR}/$IP* ] && rm -f ${SSH_DIR}/$IP*
+                    echo 'expect "password:"' >> $FILE
                     echo 'send   '$PASS"\r" >> $FILE
+                fi
+                if [ "${CHOOSE_2}" == 'sudo' ]; then
+                    echo 'expect "@"' >> $FILE
+                    echo 'send   "sudo su - \r"' >> $FILE
                 else
-                    if [ "$ISBASTION" == 1 ] && [ "$2" != "" ]; then
-                        echo 'expect "IP>:"' >> $FILE
-                        echo 'send   '$2"\r" >> $FILE
-                        echo 'expect "password:"' >> $FILE
-                        echo 'send   '$PASS"\r" >> $FILE
-                        if [ "$3" == 'sudo' ]; then
-                            echo 'expect "@"' >> $FILE
-                            echo 'send   "sudo su\r"' >> $FILE
-                            echo 'expect "password for"' >> $FILE
-                            echo 'send   '$PASS"\r" >> $FILE
-                        fi
+                    if [ "${AUTOSUDO}" == 1 ] && [ "${NAME}" != "root" ]; then
+                        echo 'expect "@"' >> $FILE
+                        echo 'send   "sudo su - \r"' >> $FILE
                     fi
                 fi
                 echo 'interact' >> $FILE
+                chmod a+x $FILE
             fi
-            chmod a+x $FILE
             $FILE
             break;
         fi
@@ -139,18 +142,18 @@ function SSHD() {
 
 function FIRST() {
     # GET INPUT CHOSEN OR GET PARAM
-    if [ "${CHOOSE}" != "" ]; then
-        if [ "${CHOOSE}" == "!" ]; then
+    if [ "${CHOOSE_1}" != "" ]; then
+        if [ "${CHOOSE_1}" == "!" ]; then
             IP=$(grep "ssh" $FILE | awk '{print $NF}')
-            ls ${SSH_DIR}/$IP* &> /dev/null && rm -f ${SSH_DIR}/$IP*
+            #[ -S ${SSH_DIR}/$IP* ] && rm -f ${SSH_DIR}/$IP*
             clear
             $FILE
             no=0
             exit 0
         fi
-        if [ "${CHOOSE}" == "d" ]; then
-            if [ "${CHOOSE_IP}" != ""  ]; then
-                xip=${CHOOSE_IP}
+        if [ "${CHOOSE_1}" == "d" ]; then
+            if [ "${CHOOSE_2}" != ""  ]; then
+                xip=${CHOOSE_2}
                 if grep "|${xip}|" ${SSH_CONFIG} &> /dev/null; then
                     sed -i "" "/\|${xip}\|/d"  ${SSH_CONFIG}
                 fi
@@ -160,9 +163,9 @@ function FIRST() {
                 exit 0
             fi
         fi
-        if [ "${CHOOSE}" == "x" ]; then
-            if [ "${CHOOSE_IP}" != ""  ]; then
-                xip=${CHOOSE_IP}
+        if [ "${CHOOSE_1}" == "x" ]; then
+            if [ "${CHOOSE_2}" != ""  ]; then
+                xip=${CHOOSE_2}
                 if ! grep "|${xip}|" ${SSH_CONFIG} &> /dev/null; then
                     My_recode="${xip}|${xip}|${My_user}|${My_pass}|${My_port}|1"
                     echo ${My_recode} >> ${SSH_CONFIG}
@@ -173,8 +176,8 @@ function FIRST() {
                 echo "wrong choose"
                 exit 0
             fi
-        elif [ -z "$(echo ${CHOOSE}| sed 's/[0-9]*//')" ]; then
-            no=${CHOOSE}
+        elif [ -z "$(echo ${CHOOSE_1}| sed 's/[0-9]*//')" ]; then
+            no=${CHOOSE_1}
         else
             echo "wrong choose"
             exit 0
@@ -183,7 +186,7 @@ function FIRST() {
         clear
         LISTS
         no=0
-        until [ $no -gt 0 -a $no -le $i ] 2>/dev/null
+        until [ $no -gt 0 -a $no -le $i ] &> /dev/null
         do
             read -p 'Server Number: ' no
             if [ "$no" == "q" ]; then
