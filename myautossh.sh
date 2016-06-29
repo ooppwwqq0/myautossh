@@ -20,16 +20,34 @@
 # $ a d ip // Delete the ip recode
 
 
-CHOOSE=$1
-CHOOSE_IP=$2
+# custom config
 My_user="wangping"
 My_pass=""
 My_port="22"
+# custon config
+
+CHOOSE=$1
+CHOOSE_IP=$2
 SSH_DIR="$(echo ~/.ssh)"
 SSH_CONFIG="${SSH_DIR}/autosshrc"
 AUTO_SSH_CONFIG=$(cat ${SSH_CONFIG})
 FILE='/tmp/.login.sh'
+BACK_DIR="$(echo ~/.sshkeybak)"
 
+
+function CONFIG() {
+    if [ ! -d ${SSH_DIR} ]; then
+        mkdir -p ${SSH_DIR}
+        chmod 600 ${SSH_DIR}
+    fi
+    if [ ! -d "${BACK_DIR}" ]; then
+        mkdir -p ${BACK_DIR}
+    fi
+    if [ ! -f ${SSH_CONFIG} ]; then
+        echo "server name|192.168.1.1|${My_user}|${My_pass}|${My_port}|1" > ${SSH_CONFIG}
+    fi
+    cp ${SSH_DIR}/* ${BACK_DIR}/
+}
 
 function LISTS() {
     BORDER_LINE="\033[1;31m############################################################ \033[0m"
@@ -78,7 +96,7 @@ function SSHD() {
             PORT=$(echo $server | awk -F\| '{ print $5 }')
             ISBASTION=$(echo $server | awk -F\| '{ print $6 }')
             if [ "$PORT" == "" ]; then
-                PORT=22
+                PORT=${My_port}
             fi
             echo '' > $FILE
             if [ "$PASS" == "" ]; then
@@ -119,7 +137,7 @@ function SSHD() {
     done
 }
 
-function MAIN() {
+function FIRST() {
     # GET INPUT CHOSEN OR GET PARAM
     if [ "${CHOOSE}" != "" ]; then
         if [ "${CHOOSE}" == "!" ]; then
@@ -178,5 +196,9 @@ function MAIN() {
     SSHD
 }
 
-cp ${SSH_DIR}/* ~/key/sshkey/
+function MAIN() {
+    CONFIG
+    FIRST
+}
+
 MAIN
