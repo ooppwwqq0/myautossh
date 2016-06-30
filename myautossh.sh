@@ -113,7 +113,7 @@ function SSHD() {
             fi
             if ! grep ${IP} ${KNOWN_CONFIG} &> /dev/null ; then
                 echo "#!/bin/bash" > $FILE
-                echo "ssh -p$PORT $NAME@$IP" >> $FILE
+                echo "ssh -p$PORT -l $NAME $IP" >> $FILE
             else
                 echo '#!/usr/bin/expect -f' > $FILE
                 echo 'set timeout 30' >> $FILE
