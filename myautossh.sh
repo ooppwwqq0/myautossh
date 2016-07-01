@@ -200,6 +200,7 @@ function FIRST() {
 }
 
 function MAIN() {
+    find ${SSH_DIR} -type s -mmin +600 | xargs -J % rm  %
     CONFIG
     FIRST
 }
