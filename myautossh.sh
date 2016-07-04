@@ -153,6 +153,10 @@ function FIRST() {
             no=0
             exit 0
         fi
+        if [ "${CHOOSE_1}" == "c" ]; then
+            find ${SSH_DIR} -type s | xargs -J % rm %
+            exit 0
+        fi
         if [ "${CHOOSE_1}" == "d" ]; then
             if [ "${CHOOSE_2}" != ""  ]; then
                 xip=${CHOOSE_2}
@@ -201,7 +205,7 @@ function FIRST() {
 }
 
 function MAIN() {
-    find ${SSH_DIR} -type s -mmin +600 | xargs -J % rm  %
+    find ${SSH_DIR} -type s -mmin +600 | xargs -J % rm %
     CONFIG
     FIRST
 }
