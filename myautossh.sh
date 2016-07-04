@@ -111,30 +111,31 @@ function SSHD() {
             if [ "$PORT" == "" ]; then
                 PORT=${My_port}
             fi
+            echo '#!/usr/bin/expect -f' > $FILE
+            echo 'set timeout 30' >> $FILE
+            echo "spawn ssh -p$PORT -l $NAME $IP" >> $FILE
             if ! grep ${IP} ${KNOWN_CONFIG} &> /dev/null ; then
-                echo "#!/bin/bash" > $FILE
-                echo "ssh -p$PORT -l $NAME $IP" >> $FILE
+                echo 'expect "(yes/no)?"' >> $FILE
+                echo 'send   'yes"\r" >> $FILE
+                #echo "#!/bin/bash" > $FILE
+                #echo "ssh -p$PORT -l $NAME $IP" >> $FILE
+            fi
+            if [ "$PASS" != "" ] && [ ! -S ${SSH_DIR}/$IP* ]; then
+                #[ -S ${SSH_DIR}/$IP* ] && rm -f ${SSH_DIR}/$IP*
+                echo 'expect "password:"' >> $FILE
+                echo 'send   '$PASS"\r" >> $FILE
+            fi
+            if [ "${CHOOSE_2}" == "sudo" ]; then
+                echo 'expect "@"' >> $FILE
+                echo 'send   "sudo su - \r"' >> $FILE
             else
-                echo '#!/usr/bin/expect -f' > $FILE
-                echo 'set timeout 30' >> $FILE
-                echo "spawn ssh -p$PORT -l $NAME $IP" >> $FILE
-                if [ "$PASS" != "" ] && [ ! -S ${SSH_DIR}/$IP* ]; then
-                    #[ -S ${SSH_DIR}/$IP* ] && rm -f ${SSH_DIR}/$IP*
-                    echo 'expect "password:"' >> $FILE
-                    echo 'send   '$PASS"\r" >> $FILE
-                fi
-                if [ "${CHOOSE_2}" == "sudo" ]; then
+                if [ "${AUTOSUDO}" == 1 ] && [ "${NAME}" != "root" ] && [ "${CHOOSE_2}" == "" ]; then
                     echo 'expect "@"' >> $FILE
                     echo 'send   "sudo su - \r"' >> $FILE
-                else
-                    if [ "${AUTOSUDO}" == 1 ] && [ "${NAME}" != "root" ] && [ "${CHOOSE_2}" == "" ]; then
-                        echo 'expect "@"' >> $FILE
-                        echo 'send   "sudo su - \r"' >> $FILE
-                    fi
                 fi
-                echo 'interact' >> $FILE
-                chmod a+x $FILE
             fi
+            echo 'interact' >> $FILE
+            chmod a+x $FILE
             $FILE
             break;
         fi
