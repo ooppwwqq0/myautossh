@@ -120,8 +120,9 @@ function SSHD() {
                 #echo "#!/bin/bash" > $FILE
                 #echo "ssh -p$PORT -l $NAME $IP" >> $FILE
             fi
+                #rmip=$(ls ${SSH_DIR}/$IP* | head 1)
             if [ "$PASS" != "" ] && [ ! -S ${SSH_DIR}/$IP* ]; then
-                #[ -S ${SSH_DIR}/$IP* ] && rm -f ${SSH_DIR}/$IP*
+                #[ -S ${rmip} ] && rm -f ${rmip}
                 echo 'expect "password:"' >> $FILE
                 echo 'send   '$PASS"\r" >> $FILE
             fi
@@ -146,8 +147,12 @@ function FIRST() {
     # GET INPUT CHOSEN OR GET PARAM
     if [ "${CHOOSE_1}" != "" ]; then
         if [ "${CHOOSE_1}" == "!" ]; then
-            IP=$(grep "ssh" $FILE | awk '{print $NF}')
+            xip=$(grep "ssh" $FILE | awk '{print $NF}')
+            #no=$(awk '{print NR,$0}' ${SSH_CONFIG} | grep "|${xip}|" | awk '{print $1}')
+            #echo $no 
             #[ -S ${SSH_DIR}/$IP* ] && rm -f ${SSH_DIR}/$IP*
+            sed -i '' '/^expect/d' $FILE
+            sed -i '' '/^send/d' $FILE
             clear
             $FILE
             no=0
@@ -182,7 +187,7 @@ function FIRST() {
                 echo "wrong choose"
                 exit 0
             fi
-        elif [ -z "$(echo ${CHOOSE_1}| sed 's/[0-9]*//')" ]; then
+        elif [ -z "$(echo ${CHOOSE_1}| sed 's/[0-9]*//')" ] || [ "${CHOOSE_1}" == '!' ]; then
             no=${CHOOSE_1}
         else
             echo "wrong choose"
