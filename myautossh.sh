@@ -143,23 +143,11 @@ function SSHD() {
     done
 }
 
-function FIRST() {
+function INPUT() {
     # GET INPUT CHOSEN OR GET PARAM
     if [ "${CHOOSE_1}" != "" ]; then
-        if [ "${CHOOSE_1}" == "!" ]; then
-            xip=$(grep "ssh" $FILE | awk '{print $NF}')
-            #no=$(awk '{print NR,$0}' ${SSH_CONFIG} | grep "|${xip}|" | awk '{print $1}')
-            #echo $no 
-            #[ -S ${SSH_DIR}/$IP* ] && rm -f ${SSH_DIR}/$IP*
-            sed -i '' '/^expect/d' $FILE
-            sed -i '' '/^send/d' $FILE
-            clear
-            $FILE
-            no=0
-            exit 0
-        fi
         if [ "${CHOOSE_1}" == "c" ]; then
-            find ${SSH_DIR} -type s | xargs -J % rm %
+            find ${SSH_DIR} -type s | xargs rm
             exit 0
         fi
         if [ "${CHOOSE_1}" == "d" ]; then
@@ -187,6 +175,11 @@ function FIRST() {
                 echo "wrong choose"
                 exit 0
             fi
+        elif [ "${CHOOSE_1}" == "!" ]; then
+            xip=$(grep "ssh" $FILE | awk '{print $NF}')
+            no=$(awk '{print NR,$0}' ${SSH_CONFIG} | grep "|${xip}|" | awk '{print $1}')
+        elif [ "${CHOOSE_1}" == "$" ]; then
+            no=$(wc -l ${SSH_CONFIG} | awk '{print $1}')
         elif [ -z "$(echo ${CHOOSE_1}| sed 's/[0-9]*//')" ] || [ "${CHOOSE_1}" == '!' ]; then
             no=${CHOOSE_1}
         else
@@ -210,9 +203,10 @@ function FIRST() {
 }
 
 function MAIN() {
-    find ${SSH_DIR} -type s -mmin +600 | xargs -J % rm %
+    #find ${SSH_DIR} -type s -mmin +600 | xargs -J % rm %
+    find ${SSH_DIR} -type s -mmin +600 | xargs rm
     CONFIG
-    FIRST
+    INPUT
 }
 
 MAIN
