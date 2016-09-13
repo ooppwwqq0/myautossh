@@ -130,7 +130,7 @@ function SSHD() {
                 echo 'expect "@"' >> $FILE
                 echo 'send   "sudo su - \r"' >> $FILE
             else
-                if [ "${AUTOSUDO}" == 1 ] && [ "${NAME}" != "root" ] && [ "${CHOOSE_2}" == "" ]; then
+                if [ "${AUTOSUDO}" == 1 ] && [ "${NAME}" != "root" ] && [ "${CHOOSE_2}" == "" -o "${CHOOSE_1}" == "x" ]; then
                     echo 'expect "@"' >> $FILE
                     echo 'send   "sudo su - \r"' >> $FILE
                 fi
